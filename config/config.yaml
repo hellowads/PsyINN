@@ -1,0 +1,115 @@
+device: 0
+epochs: 100
+early_stop_steps: 15
+
+trainer:
+  max_grad_norm: 1
+  reg_weight_decay: 0.001
+  reg_norm: 1
+data:
+  batch-size: 256
+  dataset: duolingguo/all_data
+loss:
+  name: MaskedMAELoss
+
+optimizer:
+  name: Adam
+  Adam:
+    lr: 0.005
+    weight_decay: 0.00001
+    amsgrad: true
+  RMSprop:
+    lr: 0.001
+    weight_decay: 0.0001
+
+optimizer_sr:
+  name: Adam
+  Adam:
+    lr: 0.005
+    weight_decay: 0.0001
+    amsgrad: true
+  RMSprop:
+    lr: 0.0001
+    weight_decay: 0.0001
+
+
+scheduler:
+  name: CosineAnnealingLR
+  ReduceLROnPlateau:
+    factor: 0.2
+    patience: 5
+    threshold: 0.003
+    min_lr: 0.00001
+  StepLR:
+    step_size: 10
+    gamma: 0.1
+  MultiStepLR:
+    milestones: [2, 10, 20, 50]
+    gamma: 0.3
+  CosineAnnealingLR:
+    T_max: 5
+    eta_min: 0.0000001
+
+model:
+  DKT:
+    n_question: 12326
+    p_num: 20962
+    embed_l : 100
+    embed_p : 64
+    input_dim: 11
+    hidden_dim: 256
+    layer_num: 1
+    output_dim: 1
+  Transformer:
+    n_question: 12326
+    p_num: 20962
+    embed_l : 100
+    embed_p : 64
+    i_vocab_size: 175
+    t_vocab_size: 175
+    odeflag:  Flase
+  FIFAKT:
+    n_question: 12326
+    p_num : 20962
+    embed_l : 100
+    embed_p : 64
+    hidden_dim : 50
+    input_size: 11
+  DNN:
+    hidden_dim: 256
+  LogisticRegression:
+    num_labels: 1
+    num_features: 11
+  RNN:
+    n_question: 12326
+    p_num: 20962
+    embed_l: 100
+    embed_p: 64
+    input_dim: 11
+    hidden_dim: 256
+    layer_num: 1
+    output_dim: 1
+  SAKT:
+    ex_total: 12326
+    seq_len: 16
+    dim: 256
+    heads: 2
+    dout: 0
+  QIKTNet:
+    num_q: 12326
+    num_c: 12326
+    emb_size: 256
+  SimpleKT:
+    n_question: 12326
+    n_pid: 1
+    d_model: 256
+    n_blocks: 2
+    dropout: 0.5
+  MIKT:
+    skill_max: 100
+    pro_max: 100
+    embed: 64
+    p: 0
+
+
+
