@@ -50,6 +50,8 @@ class DKT(nn.Module):
         self.dh4 = nn.Linear(6, 1)
 
     def forward(self, x,targets,device=0):
+
+        # word embeding
         q_data = x[:, :, 4].unsqueeze(-1)
         q_embed_data = self.q_embed(q_data.to(dtype=torch.long)).squeeze()  # input : [batch_size, len_seq, embedding_dim]
         # user embeding
