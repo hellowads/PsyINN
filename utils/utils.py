@@ -150,7 +150,12 @@ class OursTrainer(object):
         return self._run(inputs)
 
     def _run(self, inputs):
+        # inputs[..., 0] = self.scaler.transform(inputs[..., 0], 0.0)
         inputs = inputs.transpose(0, 1).to(self.device)
+        # outputs = self.model(inputs[:,:-1,4],inputs[:,:-1,1],inputs[:,1:,4],inputs[:,1:,1])
+        # outputs = self.model(inputs[:, :, 4], inputs[:, :, 4], inputs[:, :, 1], inputs) #QIKT
+        # outputs = self.model(inputs[:, :, 4], inputs[:, :, 4], inputs[:, :, 1]) #SimpleKT
+        # outputs = self.model(inputs[:, -1, :], inputs[:, -1, :])
         outputs = self.model(inputs[:-1, :, :], inputs[-1, :, :])
         inputs = inputs.transpose(0, 1)
         return outputs  #self.scaler.inverse_transform(outputs, 0.0)
@@ -233,7 +238,6 @@ replace,scheduler_sr
 
             running_metrics = dict()
             running_metrics1 = dict()
-            running_metrics_union = dict()
             for phase in phases:
                 steps, predicts, targets,predict_uion = 0, list(), list(), list()
                 predicts1, targets1 ,targets_union= list(),list(),list()
@@ -250,7 +254,7 @@ replace,scheduler_sr
                         torch.cuda.empty_cache()
                 for x, y in tqdm(data_loaders[phase], f'{phase.capitalize():5} {epoch}'):
                     # 归一化处理
-
+                    y[y<1] = 0;
                     targets.append(y.numpy().copy())
                     if phase == 'train':
                         y_ = trainer.train(x, y,srtrainer,use_EM,pinn_flag)
@@ -288,153 +292,11 @@ replace,scheduler_sr
                         torch.cuda.empty_cache()
 
 
-                # SRTrainer.model.fn.weight[SRTrainer.model.fn.weight>0 and SRTrainer.model.fn.weight<0.05]=0
-                # SRTrainer.model.fn.weight[SRTrainer.model.fn.weight < 0 and SRTrainer.model.fn.weight > -0.05] = 0
                 # 性能
                 running_metrics[phase] = evaluate(np.concatenate(predicts), np.concatenate(targets))
                 if use_EM:
                     running_metrics1[phase] = evaluate(np.concatenate(predicts1), np.concatenate(targets1))
-                    # with torch.no_grad():
-                    #     # if epoch > 5:
-                    #     #     pass
-                    #     #     # use_EM=False
-                    #     #     # replace = 'best_replace'
-                    #     if phase == 'train':
-                    #         if replace == 'replace':
-                    #             sr_values.append(
-                    #                 [copy.deepcopy(torch.tensor(running_metrics1['train']['loss']).to(0)),copy.deepcopy(srtrainer.model.fn.weight),copy.deepcopy(srtrainer.model.fn.bias)])
-                    #             if len(sr_values) > 10:
-                    #                 value = list()
-                    #                 sr_values = sorted(sr_values)
-                    #                 sr_values = sr_values[0:-1]
-                    #                 for i in sr_values:
-                    #                     value.append(i[1])
-                    #         else:
-                    #             if pinn_flag == 'HLR':
-                    #                 sr_values.append([copy.deepcopy(torch.tensor(running_metrics1['train']['loss']).to(0)),copy.deepcopy(srtrainer.model.fn.weight),copy.deepcopy(srtrainer.model.fn.bias)])
-                    #                 value = list()
-                    #                 bais = list()
-                    #                 if len(sr_values) > 4:
-                    #
-                    #                     sr_values = sorted(sr_values)
-                    #                     sr_values = sr_values[0:-1]
-                    #                 else:
-                    #                     sr_values = sorted(sr_values)
-                    #
-                    #
-                    #                 for i in sr_values:
-                    #                     bais.append(i[2])
-                    #                     value.append(i[1])
-                    #                 sofmax = torch.nn.Softmax(dim=0)
-                    #                 sig = sofmax(torch.stack(value).squeeze(1))
-                    #                 sig_b= sofmax(torch.stack(bais))
-                    #                 z = torch.zeros_like(sr_values[0][1])
-                    #                 b = torch.zeros_like(sr_values[0][2])
-                    #                 for i in range(len(value)):
-                    #                     z += sr_values[i][1] * sig[i]
-                    #                     b +=sr_values[i][2] * sig_b[i]
-                    #                 if replace == 'best_replace':
-                    #                     srtrainer.model.fn.weight[:] = sr_values[0][1]
-                    #                     srtrainer.model.fn.bais = sr_values[0][2]
-                    #                 elif replace == 'union':
-                    #                     srtrainer.model.fn.weight[:] = z
-                    #                     srtrainer.model.fn.bias[:] = b
-                    #                 elif replace == 'replace':
-                    #                     srtrainer.model.fn.weight[:] = srtrainer.model.fn.weight[:]
-                    #             else:
-                    #
-                    #                     fis_values.append([copy.deepcopy(torch.tensor(running_metrics1['train']['loss']).to(0)), copy.deepcopy(srtrainer.model.fis.weight),copy.deepcopy(srtrainer.model.fis.bias)])
-                    #                     time_values.append([copy.deepcopy(torch.tensor(running_metrics1['train']['loss']).to(0)), copy.deepcopy(srtrainer.model.time.weight),copy.deepcopy(srtrainer.model.time.bias)])
-                    #                     dh_values.append([copy.deepcopy(torch.tensor(running_metrics1['train']['loss']).to(0)), copy.deepcopy(srtrainer.model.dh.weight),copy.deepcopy(srtrainer.model.dh.bias)])
-                    #                     value = list()
-                    #                     loss = list()
-                    #                     bias = list()
-                    #                     value2 = list()
-                    #                     bias2 = list()
-                    #                     loss2 = list()
-                    #                     value3 = list()
-                    #                     bias3 = list()
-                    #                     loss3 = list()
-                    #                     if len(fis_values) > 4:
-                    #                         fis_values = sorted(fis_values)
-                    #                         fis_values = fis_values[0:-1]
-                    #                         time_values = sorted(time_values)
-                    #                         time_values = time_values[0:-1]
-                    #                         dh_values = sorted(dh_values)
-                    #                         dh_values = dh_values[0:-1]
-                    #                     else:
-                    #                         fis_values = sorted(fis_values)
-                    #                         time_values = sorted(time_values)
-                    #                         dh_values = sorted(dh_values)
-                    #                     for i in fis_values:
-                    #                         value.append(i[1])
-                    #                         bias.append(i[2])
-                    #                         loss.append(1.0/i[0])
-                    #                     for i in time_values:
-                    #                         value2.append(i[1])
-                    #                         bias2.append(i[2])
-                    #                         loss2.append(1.0/i[0])
-                    #                     for i in dh_values:
-                    #                         value3.append(i[1])
-                    #                         bias3.append(i[2])
-                    #                         loss3.append(1.0/i[0])
-                    #                     sofmax = torch.nn.Softmax(dim=0)
-                    #
-                    #                     if replace != 'losssoft':
-                    #                         sig = sofmax(torch.stack(value).squeeze(1))
-                    #                         sig2 = sofmax(torch.stack(value2).squeeze(1))
-                    #                         sig3 = sofmax(torch.stack(value3).squeeze(1))
-                    #                         sig_b = sofmax(torch.stack(bias).squeeze(1))
-                    #                         sig2_b = sofmax(torch.stack(bias2).squeeze(1))
-                    #                         sig3_b = sofmax(torch.stack(bias3).squeeze(1))
-                    #                     else:
-                    #                         sig =sofmax(torch.stack(loss))
-                    #                         sig2 = sofmax(torch.stack(loss2))
-                    #                         sig3 = sofmax(torch.stack(loss3))
-                    #                         sig_b = sofmax(torch.stack(loss))
-                    #                         sig2_b = sofmax(torch.stack(loss2))
-                    #                         sig3_b = sofmax(torch.stack(loss3))
-                    #                     z = torch.zeros_like(value[0])
-                    #                     z2 = torch.zeros_like(value2[0])
-                    #                     z3 = torch.zeros_like(value3[0])
-                    #                     b = torch.zeros_like(bias[0])
-                    #                     b2 = torch.zeros_like(bias2[0])
-                    #                     b3 = torch.zeros_like(bias3[0])
-                    #                     for i in range(len(value)):
-                    #                         z += value[i] * sig[i]
-                    #                         z2 += value2[i] * sig2[i]
-                    #                         z3 += value3[i] * sig3[i]
-                    #                         b +=bias[i] * sig_b[i]
-                    #                         b2 += bias2[i] * sig2_b[i]
-                    #                         b3 += bias3[i] * sig3_b[i]
-                    #                     if replace == 'best_replace':
-                    #                         srtrainer.model.fis.weight = nn.Parameter(value[0])
-                    #                         srtrainer.model.time.weight =nn.Parameter(value2[0])
-                    #                         srtrainer.model.dh.weight = nn.Parameter(value3[0])
-                    #                         srtrainer.model.fis.bias = nn.Parameter(bias[0])
-                    #                         srtrainer.model.time.bias = nn.Parameter(bias2[0])
-                    #                         srtrainer.model.dh.bias = nn.Parameter(bias3[0])
-                    #                     elif replace == 'union':
-                    #                         srtrainer.model.fis.weight[:] = z
-                    #                         srtrainer.model.time.weight[:] = z2
-                    #                         srtrainer.model.dh.weight[:] = z3
-                    #                         srtrainer.model.fis.bias[:] = b
-                    #                         srtrainer.model.time.bias[:] = b2
-                    #                         srtrainer.model.dh.bias[:] = b3
-                    #                     elif replace == 'sum':
-                    #                         srtrainer.model.fis.weight[:] = sum(value)/len(value)
-                    #                         srtrainer.model.time.weight[:] = sum(value2)/len(value2)
-                    #                         srtrainer.model.dh.weight[:] = sum(value3)/len(value3)
-                    #                         srtrainer.model.fis.bias[:] = sum(bias)/len(bias)
-                    #                         srtrainer.model.time.bias[:] = sum(bias2)/len(bias2)
-                    #                         srtrainer.model.fis.bias[:] = sum(bias3)/len(bias3)
-                    #                     elif replace == 'losssoft':
-                    #                         srtrainer.model.fn.weight[:] = z
-                    #                         srtrainer.model.time.weight[:] = z2
-                    #                         srtrainer.model.fis.weight[:] = z3
-                    #                         srtrainer.model.fn.bias[:] = b
-                    #                         srtrainer.model.time.bias[:] = b2
-                    #                         srtrainer.model.fis.bias[:] = b3
+
 
                 if phase == 'val':
                     if running_metrics['val']['loss'] < best_val_loss:
@@ -607,20 +469,20 @@ replace,scheduler_sr
                                 srtrainer.model.fis.bias[:] = nn.Parameter(bias[n])
                                 srtrainer.model.time.bias[:] = nn.Parameter(bias2[n])
                                 srtrainer.model.dh.bias[:] = nn.Parameter(bias3[n])
-                if use_EM:
-                    targets2 = list()
-                    predicts2=list()
-                    for x, y in tqdm(data_loaders['test']):
-                        # 归一化处理
-                        targets2.append(y.numpy().copy())
-                        if phase == 'train':
-                            y_ = srtrainer.train(x, y, trainer, use_EM, pinn_flag)
-                        else:
-                            y_ = srtrainer.predict(x, y, trainer, use_EM, pinn_flag)
-
-                        predicts2.append(y_.detach().cpu().numpy())
-                    running_metricsa = evaluate(np.concatenate(predicts2), np.concatenate(targets2))
-                    print(running_metricsa)
+                # if use_EM:
+                #     targets2 = list()
+                #     predicts2=list()
+                #     for x, y in tqdm(data_loaders['test']):
+                #         # 归一化处理
+                #         targets2.append(y.numpy().copy())
+                #         if phase == 'train':
+                #             y_ = srtrainer.train(x, y, trainer, use_EM, pinn_flag)
+                #         else:
+                #             y_ = srtrainer.predict(x, y, trainer, use_EM, pinn_flag)
+                #
+                #         predicts2.append(y_.detach().cpu().numpy())
+                #     running_metricsa = evaluate(np.concatenate(predicts2), np.concatenate(targets2))
+                #     print(running_metricsa)
 
                 loss_dict.update({f'SR {phase} loss: ': running_metrics1[phase] for phase in phases})
                 if pinn_flag == 'HLR' or pinn_flag == 'nom':
@@ -642,14 +504,11 @@ replace,scheduler_sr
                 else:
                     scheduler.step()
 
-            writer.add_scalars('Loss', loss_dict, global_step=epoch)
-            for metric in running_metrics['train'].keys():
-                for phase in phases:
-                    for key, val in running_metrics[phase].items():
-                        writer.add_scalars(f'{metric}/{key}', {f'{phase}': val}, global_step=epoch)
+
 
     except (ValueError, KeyboardInterrupt) as e:
         print(e)
+
     time_elapsed = time.perf_counter() - since
     print(f"cost {time_elapsed} seconds")
     print(f'The best adaptor and model of epoch {save_dict["epoch"]} successfully saved at `{save_path}`')
