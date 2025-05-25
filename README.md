@@ -1,5 +1,5 @@
 ## Evolvable Psychology Informed Neural Network for Memory Behavior Modeling
-![Model Structure Diagram](./pic/model%20(1).png)
+![Model Structure Diagram](./pic/1.jpg)
 
 ### **Environment Configuration**
 ```
@@ -11,8 +11,9 @@
 ```
 
 ### Run main.py
+Example execution input: Using the Duolingo dataset and the Wickelgren classical memory equation, the iteration strategy adopts the rand method:
 ```cmd
-python main.py
+python main.py --pinn_flag Wickelgren --replace rand --dataset duolingguo/all_data
 ```
 
 ### model output

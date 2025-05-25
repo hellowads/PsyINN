@@ -41,15 +41,15 @@ if __name__ == '__main__':
     parser.add_argument('--use_EM', type=bool, default=True)
 
     #  [Wickelgren: 'Wickelgren'; HLR function：'HLR'; ACT-R: 'ACT-R'; 'do_nothing:':'No']
-    parser.add_argument('--pinn_flag', type=str, default='Wickelgren')
+    parser.add_argument('--pinn_flag', type=str, default='Wickelgren',required=True)
 
     parser.add_argument('--EM_epoch', type=int, default="1")
 
     ## BestSelect: best_replace  ReplaceSelect: replace  RandomSelect rand
-    parser.add_argument('--replace', type=str, default="rand")
+    parser.add_argument('--replace', type=str, default="rand",required = True)
 
     # duolingguo/en_to_de ; duolingguo/en_to_es  ; duolingguo/all_data
-    parser.add_argument('--dataset', type=str, default="duolingguo/en_to_de")
+    parser.add_argument('--dataset', type=str, default="duolingguo/all_data",required=True)
 
 
     args = parser.parse_args()

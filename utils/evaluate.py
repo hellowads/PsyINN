@@ -33,7 +33,7 @@ def evaluate(predictions: np.ndarray, targets: np.ndarray):
 
     scores['ROC_AUC'] = auc_np(y_pred, y_true)
     # 针对类别不平衡问题，PR AUC是基于精确度和召回率曲线下的面积，特别适用于数据不均衡的情况。
-    scores['Pr_AUC'] = pr_auc(y_pred,y_true)
+    # scores['Pr_AUC'] = pr_auc(y_pred,y_true)
     # scores['Precision'] = precision(y_true,y_pred_acc)
     # scores['ACC'] = acc(y_true,y_pred_acc)
     # scores['Recall'] = recall(y_true, y_pred_acc)

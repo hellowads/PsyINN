@@ -8,7 +8,7 @@ trainer:
   reg_norm: 1
 data:
   batch-size: 256
-  dataset: duolingguo/en_to_de  # duolingguo/en_to_de ; duolingguo/en_to_es  ; duolingguo/all_data
+  dataset: duolingguo/all_data  # duolingguo/en_to_de ; duolingguo/en_to_es  ; duolingguo/all_data
 loss:
   name: MaskedMAELoss
 
